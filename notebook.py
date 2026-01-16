@@ -510,6 +510,8 @@ def _(pd):
                 _handle.set_linestyle("--")
                 _handle.set_dashes([2, 2])
 
+    data_fig.suptitle("actual RSV F pseudovirus neutralization data", fontsize=16, fontweight="bold", x=0.55, y=1.03)
+
     data_fig
     return data_to_plot, line_color_markers, lines, mutant_colors, neutcurve
 
@@ -518,6 +520,7 @@ def _(pd):
 def _(mo):
     mo.md(r"""
     ## Plot modeled data in same format as simulated data
+    Plot the simulated data in the same way as the real data.
     """)
     return
 
@@ -538,10 +541,10 @@ def _(
 
     # Define small shifts to prevent overlap (multiplicative factors)
     shift_factors = {
-        "Fab vs unmutated": 0.95,
-        "Fab vs mutant": 1.05,
-        "IgG vs unmutated": 0.97,
-        "IgG vs mutant": 1.03,
+        "Fab vs unmutated": 0.97,
+        "Fab vs mutant": 1.03,
+        "IgG vs unmutated": 0.95,
+        "IgG vs mutant": 1.05,
     }
 
     def simulate_neut_data(KD, c_eff=1000, f_mut=20, v_total=0.01):
@@ -585,8 +588,8 @@ def _(
 
     # Generate data for two KD values
     sim_data = pd.concat([
-        simulate_neut_data(KD=0.01).assign(facet_type="virus bound w high affinity"),
-        simulate_neut_data(KD=1.0).assign(facet_type="virus bound w low affinity"),
+        simulate_neut_data(KD=0.01).assign(facet_type="strain bound w high affinity"),
+        simulate_neut_data(KD=1.0).assign(facet_type="strain bound w low affinity"),
     ]).assign(replicate=1)
 
     fits_to_sim = neutcurve.CurveFits(
@@ -619,18 +622,14 @@ def _(
                 _handle.set_linestyle("--")
                 _handle.set_dashes([2, 2])
 
+    sim_fig.suptitle("biophysical model (simulated)", fontsize=16, fontweight="bold", x=0.61, y=1.03)
+
     sim_fig
     return
 
 
 @app.cell
 def _():
-    return
-
-
-@app.cell
-def _(line_color_markers):
-    [v[0] for k, v in line_color_markers.items() if "mutant" in k]
     return
 
 
