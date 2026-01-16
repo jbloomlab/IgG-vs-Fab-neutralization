@@ -492,7 +492,7 @@ def _(numpy, pd):
             )
         )
         .explode("comparison")
-        .assign(facet_type=lambda x: "subtype " + x["subtype"] + " vs " + x["comparison"])
+        .assign(facet_type=lambda x: "subtype " + x["subtype"] + " ± " + x["comparison"])
     )
 
     fits_to_plot = neutcurve.CurveFits(
@@ -614,8 +614,8 @@ def _(numpy, pd):
     # Use slightly larger y-axis max to accommodate data points above 1.0
     actual_ylim = (-0.05, 1.25)
     actual_viruses = [
-        ["subtype A vs K68Q", "subtype A vs K201S"],
-        ["subtype B vs K68Q", "subtype B vs N201S"],
+        ["subtype A ± K68Q", "subtype A ± K201S"],
+        ["subtype B ± K68Q", "subtype B ± N201S"],
     ]
     for i, row in enumerate(actual_viruses):
         for j, virus in enumerate(row):
