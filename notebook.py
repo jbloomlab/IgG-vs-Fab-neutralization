@@ -86,9 +86,9 @@ def _(mo):
     Note that mutations that cause a fixed change in the free energy of binding are expected to cause the same fold change in Fab IC50 in any genetic background.
 
     In the presence of these mutation(s), the fraction of Fab not neutralized becomes
-    $$p_u^{\rm{Fab}}\left(c\right) = \frac{1}{1 + \frac{c}{f_{\rm{mut}} \times K_D}}$$
+    $p_u^{\rm{Fab}}\left(c\right) = \frac{1}{1 + \frac{c}{f_{\rm{mut}} \times K_D}}$
     and the fraction of IgG not neutralized becomes
-    $$p_u^{\rm{IgG}}\left(c\right) = \frac{1}{1 + \frac{c}{f_{\rm{mut}} \times K_D} + \left(2 + \frac{c_{\rm{eff}}}{f_{\rm{mut}} \times K_D}\right)}.$$
+    $p_u^{\rm{IgG}}\left(c\right) = \frac{1}{1 + \frac{c}{f_{\rm{mut}} \times K_D} + \left(2 + \frac{c_{\rm{eff}}}{f_{\rm{mut}} \times K_D}\right)}.$
     """)
     return
 
@@ -110,9 +110,9 @@ def _(mo):
     $c_{\rm{total}} = c_{\rm{free}} + c_{\rm{bound}}$ (mass balance for the antibody),
     $v_{\rm{total}} = v_{\rm{free}} + c_{\rm{bound}}$ (mass balance for the viral antigen), and $c_{\rm{bound}} K_D^{\rm{effective}} = v_{\rm{free}} c_{\rm{free}}$ (there is an equilibrium with respect to the free antibody and antigen concentration). Note that for the Fab, $K_D^{\rm{effective}} = K_D$ and for the IgG, $K_D^{\rm{effective}} = K_D^{\rm{IgG}}$.
     Solving this system of three equations yields ([Jarmoskaite et al (2020)](https://doi.org/10.7554/eLife.57264))
-    $$c_{\rm{bound}} = \frac{c_{\rm{total}} + v_{\rm{total}} + K_D^{\rm{effective}} - \sqrt{\left(c_{\rm{total}} + v_{\rm{total}} + K_D^{\rm{effective}}\right)^2 - 4 c_{\rm{total}} v_{\rm{total}}}}{2}$$
+    $c_{\rm{bound}} = \frac{c_{\rm{total}} + v_{\rm{total}} + K_D^{\rm{effective}} - \sqrt{\left(c_{\rm{total}} + v_{\rm{total}} + K_D^{\rm{effective}}\right)^2 - 4 c_{\rm{total}} v_{\rm{total}}}}{2}$
     and so
-    $$c_{\rm{free}} = c_{\rm{total}} - c_{\rm{bound}} = \frac{c_{\rm{total}} - v_{\rm{total}} - K_D^{\rm{effective}} + \sqrt{\left(c_{\rm{total}} + v_{\rm{total}} + K_D^{\rm{effective}}\right)^2 - 4 c_{\rm{total}} v_{\rm{total}}}}{2}.$$
+    $c_{\rm{free}} = c_{\rm{total}} - c_{\rm{bound}} = \frac{c_{\rm{total}} - v_{\rm{total}} - K_D^{\rm{effective}} + \sqrt{\left(c_{\rm{total}} + v_{\rm{total}} + K_D^{\rm{effective}}\right)^2 - 4 c_{\rm{total}} v_{\rm{total}}}}{2}.$
 
     Note that in the limit where the viral antigen concentration is limiting and so we are outside the ligand depletion regime (eg, $v_{\rm{total}} \ll K_D^{\rm{effective}}$), then we just have $c_{\rm{free}} \approx c_{\rm{total}}$.
     However, when the viral antigen concentration is comparable or greater to $K_D^{\rm{effective}}$, then it is important to substitute $c_{\rm{free}}$ for $c$ in all of the equations above.
@@ -120,9 +120,9 @@ def _(mo):
     We can also calculate the actual observed IC50s accounting for ligand depletion.
     The IC50 under our assumption above that this is when half of viral epitopes are bound) occurs when $\frac{1}{2} = \frac{c_{\rm{bound}}}{v_{\rm{total}}}.$
     It turns out that this can be neatly solved to determine the actual observed IC50 (accounting for ligand depletion) is
-    $$c_{\rm{{IC50,observed}}}=K_D^{\rm{effective}} + \frac{v_{\rm{total}}}{2},$$
+    $c_{\rm{{IC50,observed}}}=K_D^{\rm{effective}} + \frac{v_{\rm{total}}}{2},$
     whereas the ideal IC50 if there is no ligand depletion (when $v_{\rm{total}} \ll K_D^{\rm{effective}}$) is just
-    $$c_{\rm{IC50,ideal}} = K_D^{\rm{effective}}.$$
+    $c_{\rm{IC50,ideal}} = K_D^{\rm{effective}}.$
 
     The floor on the measurable IC50 (eg, the lowest value that can be measured) is $\sim v_{\rm{total}} / 2$.
     """)
@@ -166,7 +166,7 @@ def _(mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _():
     import math
 
@@ -425,20 +425,35 @@ def _():
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    ## Now plot real RSV F neutralization data
-    These are data from pseudovirus neutralization assays run by Cassie and Teagan with the Long (subtype A) or B1 (subtype B) F proteins:
+    ## Plot simulated and actual RSV F neutralization data side by side
+    The plot below shows:
+
+    - **Left panels (simulated):** Neutralization curves from the biophysical model above, illustrating how IgG versus Fab differences depend on binding affinity.
+    - **Right panels (actual data):** Pseudovirus neutralization assay data from Teagan and Cassie using Long (subtype A) or B1 (subtype B) RSV F proteins with escape mutations K68Q, K201S, and N201S.
     """)
     return
 
 
-@app.cell
-def _(pd):
+@app.cell(hide_code=True)
+def _(numpy, pd):
+    import matplotlib.pyplot as plt
+    import matplotlib.font_manager as fm
+    from matplotlib.gridspec import GridSpec
     import neutcurve
 
-    # read all the data
+    # Register local Comic Neue fonts for xkcd style (more readable than Humor Sans)
+    fm.fontManager.addfont("fonts/ComicNeue-Regular.ttf")
+    fm.fontManager.addfont("fonts/ComicNeue-Bold.ttf")
+    # Register Open Sans fonts (has semibold weight) for actual data
+    fm.fontManager.addfont("fonts/OpenSans-Regular.ttf")
+    fm.fontManager.addfont("fonts/OpenSans-SemiBold.ttf")
+    fm.fontManager.addfont("fonts/OpenSans-Bold.ttf")
+    # Rebuild font cache to ensure fonts are found
+    fm._load_fontmanager(try_read_cache=False)
+
+    # ===== Read and prepare real data =====
     real_data = pd.read_csv("actual_RSV-F_data.csv")
 
-    # get just the comparisons to plot here in correct format
     data_to_plot = (
         real_data
         .query("date in ['2025-08-28', '2025-10-02']")
@@ -460,86 +475,24 @@ def _(pd):
             comparison=lambda x: x.apply(
                 lambda r: (
                     (["K68Q", "K201S"] if r["subtype"] == "A" else ["K68Q", "N201S"])
-                    if r["mutant"] =="unmutated"
+                    if r["mutant"] == "unmutated"
                     else [r["mutant"]]
                 ),
                 axis=1,
             )
         )
         .explode("comparison")
-        .assign(facet_type=lambda x: "subtype " + x["subtype"] + " vs " + x["comparison"]) 
+        .assign(facet_type=lambda x: "subtype " + x["subtype"] + " vs " + x["comparison"])
     )
 
-    # make the plots
     fits_to_plot = neutcurve.CurveFits(
         data_to_plot, serum_col="line_type", virus_col="facet_type"
     )
 
-    lines = ["IgG vs unmutated", "IgG vs mutant", "Fab vs unmutated", "Fab vs mutant"]
-    line_color_markers = {
-        "Fab vs unmutated": ("#1f77b4", "o"),
-        "Fab vs mutant": ("#6baed6", "^"),
-        "IgG vs unmutated": ("#ff7f0e", "o"),
-        "IgG vs mutant": ("#fdae6b", "^"),
-    }
-
-    data_fig, data_axes = fits_to_plot.plotViruses(
-        ncol=2,
-        viruses=["subtype A vs K68Q", "subtype A vs K201S", "subtype B vs K68Q", "subtype B vs N201S"],
-        sera=lines,
-        serum_to_color_marker=line_color_markers,
-        legendfontsize=15,
-        labelsize=15,
-        titlesize=15,
-        markersize=7,
-        linewidth=1.5,
-        xlabel="antibody concentration (nM)",
-        ylabel="fraction viral infectivity",
-    )
-
-    # Postprocess: make mutant lines dashed
-    mutant_colors = [v[0] for k, v in line_color_markers.items() if "mutant" in k]
-    for _ax in data_axes.flat:
-        for _line in _ax.get_lines(): 
-            if (_line.get_color() in mutant_colors) and (_line.get_label() == "fit"):
-                _line.set_linestyle("--")
-                _line.set_dashes([2, 2])  # explicitly set dash pattern
-    for _legend in data_fig.legends:
-        for _handle, _text in zip(_legend.legend_handles, _legend.get_texts()):
-            if "mutant" in _text.get_text():
-                _handle.set_linestyle("--")
-                _handle.set_dashes([2, 2])
-
-    data_fig.suptitle("actual RSV F pseudovirus neutralization data", fontsize=16, fontweight="bold", x=0.55, y=1.03)
-
-    data_fig
-    return data_to_plot, line_color_markers, lines, mutant_colors, neutcurve
-
-
-@app.cell
-def _(mo):
-    mo.md(r"""
-    ## Plot modeled data in same format as simulated data
-    Plot the simulated data in the same way as the real data.
-    """)
-    return
-
-
-@app.cell
-def _(
-    data_to_plot,
-    line_color_markers,
-    lines,
-    mutant_colors,
-    neutcurve,
-    numpy,
-    pd,
-):
-    # Extract actual concentrations used in experiments for IgG and Fab
+    # ===== Generate simulated data =====
     igg_conc = sorted(data_to_plot.query("antibody_type == 'IgG'")["concentration"].unique())
     fab_conc = sorted(data_to_plot.query("antibody_type == 'Fab'")["concentration"].unique())
 
-    # Define small shifts to prevent overlap (multiplicative factors)
     shift_factors = {
         "Fab vs unmutated": 0.97,
         "Fab vs mutant": 1.03,
@@ -551,42 +504,24 @@ def _(
         """Simulate neutralization data for Fab and IgG against unmutated and mutant virus."""
         data = []
         for antibody_type, is_igg in [("Fab", False), ("IgG", True)]:
-            # Use appropriate concentration range for antibody type
             concentrations = numpy.array(igg_conc if is_igg else fab_conc)
-
             for mutant_status, fold_change in [("unmutated", 1), ("mutant", f_mut)]:
                 line_type = f"{antibody_type} vs {mutant_status}"
-
-                # Apply shift to prevent overlap
                 shifted_conc = concentrations * shift_factors[line_type]
-
-                # Calculate effective KD
                 KD_eff = KD * fold_change
                 if is_igg:
                     KD_eff = KD_eff / (2 + c_eff / KD_eff)
-
-                # Calculate free concentration accounting for ligand depletion
                 c_free = (
                     (shifted_conc - v_total - KD_eff) +
                     numpy.sqrt((shifted_conc + v_total + KD_eff)**2 - 4 * shifted_conc * v_total)
                 ) / 2
-
-                # Calculate fraction infectivity
                 fraction_infectivity = 1 / (1 + c_free / KD_eff)
-
                 data.extend([
-                    {
-                        "concentration": c,
-                        "fraction infectivity": fi,
-                        "line_type": line_type,
-                        "facet_type": f"KD={KD} nM vs mutation",
-                    }
+                    {"concentration": c, "fraction infectivity": fi, "line_type": line_type}
                     for c, fi in zip(shifted_conc, fraction_infectivity)
                 ])
-
         return pd.DataFrame(data)
 
-    # Generate data for two KD values
     sim_data = pd.concat([
         simulate_neut_data(KD=0.01).assign(facet_type="strain bound w high affinity"),
         simulate_neut_data(KD=1.0).assign(facet_type="strain bound w low affinity"),
@@ -596,44 +531,115 @@ def _(
         sim_data, serum_col="line_type", virus_col="facet_type"
     )
 
-    sim_fig, sim_axes = fits_to_sim.plotViruses(
-        ncol=1,
-        sera=lines,
-        serum_to_color_marker=line_color_markers,
-        legendfontsize=15,
-        labelsize=15,
-        titlesize=15,
-        markersize=7,
-        linewidth=1.5,
-        xlabel="antibody concentration (nM)",
-        ylabel="fraction viral infectivity",
-        yticklocs=[0, 0.5, 1],
-    )
+    # ===== Define styling =====
+    lines = ["IgG vs unmutated", "IgG vs mutant", "Fab vs unmutated", "Fab vs mutant"]
+    line_color_markers = {
+        "Fab vs unmutated": ("#1f77b4", "o"),
+        "Fab vs mutant": ("#6baed6", "^"),
+        "IgG vs unmutated": ("#ff7f0e", "o"),
+        "IgG vs mutant": ("#fdae6b", "^"),
+    }
+    mutant_colors = [v[0] for k, v in line_color_markers.items() if "mutant" in k]
 
-    # Postprocess: make mutant lines dashed
-    for _ax in sim_axes.flat:
-        for _line in _ax.get_lines(): 
-            if (_line.get_color() in mutant_colors) and (_line.get_label() == "fit"):
-                _line.set_linestyle("--")
-                _line.set_dashes([2, 2])  # explicitly set dash pattern
-    for _legend in sim_fig.legends:
-        for _handle, _text in zip(_legend.legend_handles, _legend.get_texts()):
-            if "mutant" in _text.get_text():
-                _handle.set_linestyle("--")
-                _handle.set_dashes([2, 2])
+    # ===== Create combined figure with GridSpec =====
+    # Wider panels (greater width to height ratio) with space for legend in gap
+    fig = plt.figure(figsize=(15.7, 5.25))
+    gs = GridSpec(2, 4, figure=fig, width_ratios=[1, 1.15, 1, 1], wspace=0.08, hspace=0.28)
 
-    sim_fig.suptitle("biophysical model (simulated)", fontsize=16, fontweight="bold", x=0.61, y=1.03)
+    # Create axes: col 0 = simulated, col 1 = gap (skip), cols 2-3 = actual
+    sim_axes = [fig.add_subplot(gs[0, 0]), fig.add_subplot(gs[1, 0])]
+    data_axes = [
+        [fig.add_subplot(gs[0, 2]), fig.add_subplot(gs[0, 3])],
+        [fig.add_subplot(gs[1, 2]), fig.add_subplot(gs[1, 3])],
+    ]
 
-    sim_fig
+    # ===== Helper function to plot curves on an axes =====
+    def plot_panel(ax, fits, virus, title, show_yticks=False, show_xticks=False, ylim=(-0.05, 1.1), fontname=None):
+        ax.set_xscale("log")
+        for line_type in lines:
+            curve = fits.getCurve(serum=line_type, virus=virus, replicate="average")
+            color, marker = line_color_markers[line_type]
+            linestyle = "--" if color in mutant_colors else "-"
+            curve.plot(
+                ax=ax, color=color, marker=marker, markersize=8,
+                linewidth=1.75, linestyle=linestyle,
+                xlabel=None, ylabel=None,
+            )
+        # Re-enable autoscale after plotting and recalculate limits
+        ax.autoscale(True, "both")
+        ax.relim()
+        ax.autoscale_view()
+        ax.set_title(title, fontsize=16, fontname=fontname)
+        ax.set_xlabel("")
+        ax.set_ylabel("")
+        if not show_xticks:
+            ax.tick_params(labelbottom=False)
+        if not show_yticks:
+            ax.tick_params(labelleft=False)
+        ax.tick_params(labelsize=12)
+        ax.set_yticks([0, 0.5, 1])
+        ax.set_ylim(ylim)
+        # Set font for tick labels if specified
+        if fontname:
+            for label in ax.get_xticklabels() + ax.get_yticklabels():
+                label.set_fontname(fontname)
+
+    # ===== Plot simulated data (in xkcd style) =====
+    sim_viruses = ["strain bound w high affinity", "strain bound w low affinity"]
+    with plt.xkcd():
+        # Set Comic Neue as font within xkcd context
+        plt.rcParams['font.family'] = 'Comic Neue'
+        for i, virus in enumerate(sim_viruses):
+            plot_panel(sim_axes[i], fits_to_sim, virus, virus,
+                       show_yticks=True, show_xticks=(i == 1), fontname='Comic Neue')
+        # Add title and axis labels for simulated data in xkcd font
+        fig.text(0.21, 0.98, "biophysical model (simulated)", ha="center",
+                 fontsize=18, fontweight="bold", fontname='Comic Neue')
+        fig.text(0.09, 0.5, "fraction viral infectivity", va="center", ha="center",
+                 rotation=90, fontsize=17, fontname='Comic Neue')
+        fig.text(0.22, 0.02, "antibody concentration (nM)", ha="center", fontsize=17,
+                 fontname='Comic Neue')
+
+    # ===== Plot actual data =====
+    # Use slightly larger y-axis max to accommodate data points above 1.0
+    actual_ylim = (-0.05, 1.25)
+    actual_viruses = [
+        ["subtype A vs K68Q", "subtype A vs K201S"],
+        ["subtype B vs K68Q", "subtype B vs N201S"],
+    ]
+    for i, row in enumerate(actual_viruses):
+        for j, virus in enumerate(row):
+            plot_panel(data_axes[i][j], fits_to_plot, virus, virus,
+                       show_yticks=(j == 0), show_xticks=(i == 1), ylim=actual_ylim,
+                       fontname='Open Sans')
+
+    # ===== Add section title and axis labels for actual data =====
+    fig.text(0.71, 0.98, "actual RSV F pseudovirus neutralization data",
+             ha="center", fontsize=17, fontweight=600, fontname='Open Sans')
+    fig.text(0.497, 0.5, "fraction viral infectivity", va="center", ha="center",
+             rotation=90, fontsize=16, fontname='Open Sans')
+    fig.text(0.71, 0.02, "antibody concentration (nM)", ha="center", fontsize=16,
+             fontname='Open Sans')
+
+    # ===== Create shared legend (vertical, in the gap between panel groups) =====
+    handles = [
+        plt.Line2D([0], [0], color=c, marker=m,
+                   linestyle=("--" if c in mutant_colors else "-"),
+                   markersize=8, linewidth=1.75)
+        for lt in lines
+        for c, m in [line_color_markers[lt]]
+    ]
+    fig.legend(handles, lines, loc="center", ncol=1, fontsize=15,
+               bbox_to_anchor=(0.395, 0.5))
+
+    fig.tight_layout(rect=[0.02, 0.05, 1, 0.96])
+    plt.savefig("simulated_vs_actual_curves.svg", bbox_inches="tight")
+    plt.savefig("simulated_vs_actual_curves.pdf", bbox_inches="tight")
+    fig
     return
 
 
-@app.cell
-def _():
-    return
-
-
-@app.cell
+@app.cell(hide_code=True)
 def _():
     return
 
