@@ -1,0 +1,15 @@
+name: IgG-vs-Fab-neutralization
+
+channels:
+  - conda-forge
+  - bioconda
+
+dependencies:
+  - altair=6.0
+  - marimo=0.19
+  - numpy
+  - pandas=2.3
+  - pyarrow
+  - python=3.13
+  - pip:
+      - neutcurve==2.3
