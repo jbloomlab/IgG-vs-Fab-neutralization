@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.17.6"
+__generated_with = "0.19.2"
 app = marimo.App(width="medium")
 
 
@@ -70,9 +70,9 @@ def _(mo):
     ## Estimating $c_{\rm{eff}}$ from the IgG versus Fab IC50
     We can estimate $c_{\rm{eff}}$ (the parameter that describes the extent of avidity from bivalent binding) from the IC50 (or midpoint on the neutralization curve) of the IgG versus Fab.
     In particular, let $m_{\rm{Fab}}$ and $m_{\rm{IgG}}$ be the molar concentrations at the midpoint (IC50) of the Fab versus IgG neutralization curves, respectively.
-    Then $K_D = m_{\rm{Fab}}$ and $$1/2 = \frac{1}{1 + \frac{m_{\rm{IgG}}}{m_{\rm{Fab}}}\left(2 + \frac{c_{\rm{eff}}}{m_{\rm{Fab}}}\right)}.$$
+    Then $K_D = m_{\rm{Fab}}$ and $1/2 = \frac{1}{1 + \frac{m_{\rm{IgG}}}{m_{\rm{Fab}}}\left(2 + \frac{c_{\rm{eff}}}{m_{\rm{Fab}}}\right)}.$
     Solving for $c_{\rm{eff}}$ yields
-    $$c_{\rm{eff}} = m_{\rm{Fab}}\left(\frac{m_{\rm{Fab}}}{m_{\rm{IgG}}} - 2\right).$$
+    $c_{\rm{eff}} = m_{\rm{Fab}}\left(\frac{m_{\rm{Fab}}}{m_{\rm{IgG}}} - 2\right).$
     """)
     return
 
@@ -137,12 +137,13 @@ def _(mo):
     We ballpark (these are rough estimates) realistic parameter values for Nirsevimab from our experiments.
     For the Fab IC50, which is represented by $m_{\rm{Fab}}$ or $K_D$ in the above equations:
       - subgroup A (Long) strain: $K_D \sim 0.01$ nM
-      - subgroup B (B1) strain: $K_D \sim 10$ nM
+      - subgroup B (B1) strain: $K_D \sim 1$ nM
 
     We also need to estimate $c_{\rm{eff}}$; however, doing that is complicated by the fact that at least for subgroup A, the IgG neutralization assays are likely in the ligand depletion range (what [Jarmoskaite et al (2020)](https://elifesciences.org/articles/57264) call the "titration regime") where the IgG IC50 ($m_{\rm{IgG}}$) cannot be measured accurately since the concentration of the viral antigen protein likely is comparable or greater to the true IgG IC50.
     So we will use neutralization measurements against the subgroup B (B1) strain as any IgG ligand depletion should be less here due to the lower potency, and we assume that the actual avidity (potential for bivalent binding) captured in $c_{\rm{eff}}$ should not be strain dependent.
-    Against this strain, we have $m_{\rm{IgG}} \sim 0.01$ nM and $m_{\rm{Fab}} \sim 10$ nM.
-    So this gives $c_{\rm{eff}} \sim 10000$ nM.
+    Against this strain, we have $m_{\rm{IgG}} \sim 0.01$ nM and $m_{\rm{Fab}} \sim 1$ nM.
+    So this gives $c_{\rm{eff}} \sim 100$ nM.
+    However, there is probably still ligand depletion in the measurement of $m_{\rm{IgG}}$ since the subtype B IgG neutralization is just as good as subtype A, so we will add another factor of to and use $c_{\rm{eff}} \sim 1000$ nM.
 
     The hardest parameter to estimate is the number of viral epitopes $v_{\rm{total}}$ which determines if there is ligand depletion.
     Roughly, we might estimate $10^6$ infectious particles per ml, with a $10^2$ non-infectious particles for each infectious one, $10^2$ epitopes per particle.
@@ -167,6 +168,8 @@ def _(mo):
 
 @app.cell
 def _():
+    import math
+
     import altair as alt
 
     import marimo as mo
@@ -193,7 +196,7 @@ def _():
 
     log10_c_eff = alt.param(
         name="log10_c_eff",
-        value=4,
+        value=3,
         bind=alt.binding_range(
             min=-2,
             max=5,
@@ -204,7 +207,7 @@ def _():
 
     log10_f_mut = alt.param(
         name="log10_f_mut",
-        value=1,
+        value=1.3,
         bind=alt.binding_range(
             min=-1,
             max=3,
@@ -416,22 +419,179 @@ def _():
     chart.save("chart.html")
 
     chart
-    return (mo,)
+    return mo, numpy, pd
 
 
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
- 
+    ## Now plot real RSV F neutralization data
+    These are data from pseudovirus neutralization assays run by Cassie and Teagan with the Long (subtype A) or B1 (subtype B) F proteins:
     """)
     return
 
 
-@app.cell(hide_code=True)
+@app.cell
+def _(pd):
+    import neutcurve
+
+    # read all the data
+    real_data = pd.read_csv("actual_RSV-F_data.csv")
+
+    # get just the comparisons to plot here in correct format
+    data_to_plot = (
+        real_data
+        .query("date in ['2025-08-28', '2025-10-02']")
+        .assign(
+            antibody=lambda x: x["serum"].str.split().str[0],
+            antibody_type=lambda x: x["serum"].str.split().str[1],
+            strain=lambda x: x["virus"].str.split().str[1],
+            subtype=lambda x: x["strain"].map({"Long": "A", "B1": "B"}),
+            mutant=lambda x: x["virus"].str.split().str[-1].map(
+                lambda m: "unmutated" if m == "WT" else m
+            ),
+            line_type=lambda x: x["antibody_type"] + " vs " + x["mutant"].map(
+                lambda m: "mutant" if m != "unmutated" else "unmutated"
+            )
+        )
+        .query("antibody == 'Nirsevimab'")
+        .query("mutant in ['unmutated', 'K68Q', 'K201S', 'N201S']")
+        .assign(
+            comparison=lambda x: x.apply(
+                lambda r: (
+                    (["K68Q", "K201S"] if r["subtype"] == "A" else ["K68Q", "N201S"])
+                    if r["mutant"] =="unmutated"
+                    else [r["mutant"]]
+                ),
+                axis=1,
+            )
+        )
+        .explode("comparison")
+        .assign(facet_type=lambda x: "subtype " + x["subtype"] + " vs " + x["comparison"]) 
+    )
+
+    # make the plots
+    fits_to_plot = neutcurve.CurveFits(
+        data_to_plot, serum_col="line_type", virus_col="facet_type"
+    )
+
+    lines = ["IgG vs unmutated", "IgG vs mutant", "Fab vs unmutated", "Fab vs mutant"]
+    line_color_markers = {
+        "Fab vs unmutated": ("#1f77b4", "o"),
+        "Fab vs mutant": ("#6baed6", "^"),
+        "IgG vs unmutated": ("#ff7f0e", "o"),
+        "IgG vs mutant": ("#fdae6b", "^"),
+    }
+
+    data_fig, data_axes = fits_to_plot.plotViruses(
+        ncol=2,
+        viruses=["subtype A vs K68Q", "subtype A vs K201S", "subtype B vs K68Q", "subtype B vs N201S"],
+        sera=lines,
+        serum_to_color_marker=line_color_markers,
+        legendfontsize=15,
+        labelsize=15,
+        titlesize=15,
+        markersize=7,
+        linewidth=1.5,
+        xlabel="antibody concentration (nM)",
+        ylabel="fraction viral infectivity",
+    )
+
+    data_fig
+    return data_to_plot, line_color_markers, lines, neutcurve
+
+
+@app.cell
 def _(mo):
     mo.md(r"""
- 
+    ## Plot modeled data in same format as simulated data
     """)
+    return
+
+
+@app.cell
+def _(data_to_plot, line_color_markers, lines, neutcurve, numpy, pd):
+    # Extract actual concentrations used in experiments for IgG and Fab
+    igg_conc = sorted(data_to_plot.query("antibody_type == 'IgG'")["concentration"].unique())
+    fab_conc = sorted(data_to_plot.query("antibody_type == 'Fab'")["concentration"].unique())
+
+    # Define small shifts to prevent overlap (multiplicative factors)
+    shift_factors = {
+        "Fab vs unmutated": 0.95,
+        "Fab vs mutant": 1.05,
+        "IgG vs unmutated": 0.97,
+        "IgG vs mutant": 1.03,
+    }
+
+    def simulate_neut_data(KD, c_eff=1000, f_mut=20, v_total=0.01):
+        """Simulate neutralization data for Fab and IgG against unmutated and mutant virus."""
+        data = []
+        for antibody_type, is_igg in [("Fab", False), ("IgG", True)]:
+            # Use appropriate concentration range for antibody type
+            concentrations = numpy.array(igg_conc if is_igg else fab_conc)
+
+            for mutant_status, fold_change in [("unmutated", 1), ("mutant", f_mut)]:
+                line_type = f"{antibody_type} vs {mutant_status}"
+
+                # Apply shift to prevent overlap
+                shifted_conc = concentrations * shift_factors[line_type]
+
+                # Calculate effective KD
+                KD_eff = KD * fold_change
+                if is_igg:
+                    KD_eff = KD_eff / (2 + c_eff / KD_eff)
+
+                # Calculate free concentration accounting for ligand depletion
+                c_free = (
+                    (shifted_conc - v_total - KD_eff) +
+                    numpy.sqrt((shifted_conc + v_total + KD_eff)**2 - 4 * shifted_conc * v_total)
+                ) / 2
+
+                # Calculate fraction infectivity
+                fraction_infectivity = 1 / (1 + c_free / KD_eff)
+
+                data.extend([
+                    {
+                        "concentration": c,
+                        "fraction infectivity": fi,
+                        "line_type": line_type,
+                        "facet_type": f"KD={KD} nM vs mutation",
+                    }
+                    for c, fi in zip(shifted_conc, fraction_infectivity)
+                ])
+
+        return pd.DataFrame(data)
+
+    # Generate data for two KD values
+    sim_data = pd.concat([
+        simulate_neut_data(KD=0.01).assign(facet_type="virus bound w high affinity"),
+        simulate_neut_data(KD=1.0).assign(facet_type="virus bound w low affinity"),
+    ]).assign(replicate=1)
+
+    fits_to_sim = neutcurve.CurveFits(
+        sim_data, serum_col="line_type", virus_col="facet_type"
+    )
+
+    sim_fig, sim_axes = fits_to_sim.plotViruses(
+        ncol=1,
+        sera=lines,
+        serum_to_color_marker=line_color_markers,
+        legendfontsize=15,
+        labelsize=15,
+        titlesize=15,
+        markersize=7,
+        linewidth=1.5,
+        xlabel="antibody concentration (nM)",
+        ylabel="fraction viral infectivity",
+        yticklocs=[0, 0.5, 1],
+    )
+
+    sim_fig
+    return
+
+
+@app.cell
+def _():
     return
 
 
