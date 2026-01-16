@@ -497,8 +497,21 @@ def _(pd):
         ylabel="fraction viral infectivity",
     )
 
+    # Postprocess: make mutant lines dashed
+    mutant_colors = [v[0] for k, v in line_color_markers.items() if "mutant" in k]
+    for _ax in data_axes.flat:
+        for _line in _ax.get_lines(): 
+            if (_line.get_color() in mutant_colors) and (_line.get_label() == "fit"):
+                _line.set_linestyle("--")
+                _line.set_dashes([2, 2])  # explicitly set dash pattern
+    for _legend in data_fig.legends:
+        for _handle, _text in zip(_legend.legend_handles, _legend.get_texts()):
+            if "mutant" in _text.get_text():
+                _handle.set_linestyle("--")
+                _handle.set_dashes([2, 2])
+
     data_fig
-    return data_to_plot, line_color_markers, lines, neutcurve
+    return data_to_plot, line_color_markers, lines, mutant_colors, neutcurve
 
 
 @app.cell
@@ -510,7 +523,15 @@ def _(mo):
 
 
 @app.cell
-def _(data_to_plot, line_color_markers, lines, neutcurve, numpy, pd):
+def _(
+    data_to_plot,
+    line_color_markers,
+    lines,
+    mutant_colors,
+    neutcurve,
+    numpy,
+    pd,
+):
     # Extract actual concentrations used in experiments for IgG and Fab
     igg_conc = sorted(data_to_plot.query("antibody_type == 'IgG'")["concentration"].unique())
     fab_conc = sorted(data_to_plot.query("antibody_type == 'Fab'")["concentration"].unique())
@@ -586,7 +607,30 @@ def _(data_to_plot, line_color_markers, lines, neutcurve, numpy, pd):
         yticklocs=[0, 0.5, 1],
     )
 
+    # Postprocess: make mutant lines dashed
+    for _ax in sim_axes.flat:
+        for _line in _ax.get_lines(): 
+            if (_line.get_color() in mutant_colors) and (_line.get_label() == "fit"):
+                _line.set_linestyle("--")
+                _line.set_dashes([2, 2])  # explicitly set dash pattern
+    for _legend in sim_fig.legends:
+        for _handle, _text in zip(_legend.legend_handles, _legend.get_texts()):
+            if "mutant" in _text.get_text():
+                _handle.set_linestyle("--")
+                _handle.set_dashes([2, 2])
+
     sim_fig
+    return
+
+
+@app.cell
+def _():
+    return
+
+
+@app.cell
+def _(line_color_markers):
+    [v[0] for k, v in line_color_markers.items() if "mutant" in k]
     return
 
 
