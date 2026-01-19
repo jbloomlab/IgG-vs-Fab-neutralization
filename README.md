@@ -1,4 +1,4 @@
-# IgG versus Fab neutralization
+# Biophysical model of IgG versus Fab neutralization
 
 Quantitative analysis by [Jesse Bloom](https://jbloomlab.org/) of virus neutralization by IgG versus Fab antibody forms accounting for IgG avidity and the possibility of ligand depletion for potent antibodies.
 
@@ -15,6 +15,8 @@ It also creates plots of model-simulated and real RSV F neutralization data in [
 To view the notebook and interactive chart directly, go to the GitHub Pages rendering at [https://jbloomlab.github.io/IgG-vs-Fab-neutralization](https://jbloomlab.github.io/IgG-vs-Fab-neutralization).
 
 The file [actual_RSV-F_data.csv](actual_RSV-F_data.csv) has some actual data for RSV F that is plotted by the notebook.
+
+A schematic conceptually illustrating the the principle created with BioRender is in [./biorender/](biorender).
 
 ## Fonts
 The [fonts](fonts/) directory contains font files used for plotting:

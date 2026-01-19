@@ -1,12 +1,13 @@
 import marimo
 
-__generated_with = "0.19.2"
+__generated_with = "0.16.5"
 app = marimo.App(width="medium")
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""
+    mo.md(
+        r"""
     # Biophysical model for how antibody affinity shapes the impact of viral antigen mutations on antibody IgG versus Fab neutralization
 
     ## Overview
@@ -20,6 +21,23 @@ def _(mo):
 
     ## Biophysical model
 
+    ### Simple schematic illustrating principle of model
+    The schematic below illustrates the principle of the model (this schematic was generated with BioRender):
+    """
+    )
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.image("biorender/IgG-vs-Fab neutralization.png", width="100%")
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(
+        r"""
     ### Fab binding
     Let the binding affinity of the Fab have dissociation constant $K_D$.
     There are two possible states, unbound ($U$) and bound ($B$).
@@ -29,13 +47,15 @@ def _(mo):
     $p^{\rm{Fab}}_u\left(c\right) = \frac{w_U\left(c\right)}{w_U\left(c\right) + w_B\left(c\right)} = \frac{1}{1 + c/K_D}.$
 
     This two-state partition-function formulation for monovalent binding follows classic multivalency treatments ([Perelson & DeLisi, 1980](https://www.sciencedirect.com/science/article/abs/pii/0025556480900176); [Hlavacek et al., 1999](https://pubmed.ncbi.nlm.nih.gov/10354429/)).
-    """)
+    """
+    )
     return
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""
+    mo.md(
+        r"""
     ### IgG binding
     For the IgG, we will assume each arm of the bivalent IgG has the same monovalent affinity for the viral antigen as the Fab described above.
     However, once the first arm binds, the effective concentration $c_{\rm{eff}}$ of the second arm is set by the density/spacing of viral antigens and the reach of the antibody.
@@ -51,13 +71,15 @@ def _(mo):
     $p_u^{\rm{IgG}}\left(c\right) = \frac{w_U\left(c\right)}{w_U\left(c\right) + 2 w_{B_1}\left(c\right) + w_{B_2}\left(c\right)} = \frac{1}{1 + 2 \frac{c}{K_D} + \frac{c}{K_D} \frac{c_{\rm{eff}}}{K_D}} = \frac{1}{1 + \frac{c}{K_D}\left(2 + \frac{c_{\rm{eff}}}{K_D}\right)}.$
 
     Note that the effective dissociation constant of the IgG is $K_D^{\rm{IgG}} = K_D / \left(2 + \frac{c_{\rm{eff}}}{K_D}\right)$.
-    """)
+    """
+    )
     return
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""
+    mo.md(
+        r"""
     ### Assumption: binding affinity equals neutralization potency
     In what follows, we assume that binding affinity equals neutralization potency, such that the neutralization IC50 of the Fab is equivalent to $K_D$.
     In other words, we equate fraction infectivity with fraction of viral epitopes ($p_u$); as described immediately below, deviations can occur under multi-hit models.
@@ -68,26 +90,30 @@ def _(mo):
     Here we are going to **ignore** this issue for now, and just conflate neutralization IC50 with Fab $K_D$.
     This is a quantitative simplification, but should not affect the main qualitative trends--and has the advantage of not requiring us to estimate difficult to determine quantities such as how many spikes there are per virion and what fraction of them must be bound for neutralization.
     Note that in the limiting case where this is just one spike per virion and binding one site on it is sufficient for neutralization, then ignoring this issue has no effect.
-    """)
+    """
+    )
     return
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""
+    mo.md(
+        r"""
     ### Estimating $c_{\rm{eff}}$ from the IgG versus Fab IC50
     We can estimate $c_{\rm{eff}}$ (the parameter that describes the extent of avidity from bivalent binding) from the IC50 (or midpoint on the neutralization curve) of the IgG versus Fab.
     In particular, let $m_{\rm{Fab}}$ and $m_{\rm{IgG}}$ be the molar concentrations at the midpoint (IC50) of the Fab versus IgG neutralization curves, respectively.
     Then $K_D = m_{\rm{Fab}}$ and $1/2 = \frac{1}{1 + \frac{m_{\rm{IgG}}}{m_{\rm{Fab}}}\left(2 + \frac{c_{\rm{eff}}}{m_{\rm{Fab}}}\right)}.$
     Solving for $c_{\rm{eff}}$ yields
     $c_{\rm{eff}} = m_{\rm{Fab}}\left(\frac{m_{\rm{Fab}}}{m_{\rm{IgG}}} - 2\right).$
-    """)
+    """
+    )
     return
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""
+    mo.md(
+        r"""
     ### Impact of mutation(s)
     Consider one or more mutations that cause a fold change in Fab IC50 of $f_{\rm{mut}}$.
     For instance, a mutation that increases the Fab IC50 by 20-fold would have $f_{\rm{mut}} = 20$.
@@ -97,13 +123,15 @@ def _(mo):
     $p_u^{\rm{Fab}}\left(c\right) = \frac{1}{1 + \frac{c}{f_{\rm{mut}} \times K_D}}$
     and the fraction of IgG not neutralized becomes
     $p_u^{\rm{IgG}}\left(c\right) = \frac{1}{1 + \frac{c}{f_{\rm{mut}} \times K_D}\left(2 + \frac{c_{\rm{eff}}}{f_{\rm{mut}} \times K_D}\right)}.$
-    """)
+    """
+    )
     return
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""
+    mo.md(
+        r"""
     ### Complication: accounting for ligand depletion
     Everything above is written in terms of the antibody (Fab or IgG) concentration $c$.
     In fact, $c$ in these equations refers to the _free_ concentration of antibody.
@@ -133,13 +161,15 @@ def _(mo):
     $c_{\rm{IC50,ideal}} = K_D^{\rm{effective}}.$
 
     The floor on the measurable IC50 (eg, the lowest value that can be measured) is $\sim v_{\rm{total}} / 2$.
-    """)
+    """
+    )
     return
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""
+    mo.md(
+        r"""
     ### Some realistic parameter estimates
 
     We ballpark (these are rough estimates) realistic parameter values for Nirsevimab and RSV F from our experiments.
@@ -157,20 +187,23 @@ def _(mo):
     Roughly, we might estimate $10^6$ infectious particles per ml, with $10^2$ non-infectious particles for each infectious one, $10^2$ epitopes per particle.
     In that case, we have $10^{13}$ epitopes / liter, which gives $v_{\rm{total}} \sim 0.01$ nM.
     Note that this is very much a ballpark estimate, and could vary by an order of magnitude or more in either direction.
-    """)
+    """
+    )
     return
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""
+    mo.md(
+        r"""
     ## Interactive visualization of IgG and Fab neutralization and how it is affected by mutations
 
     We now plot interactive visualizations initialized with the ballpark-realistic parameter values above for the subgroup A strain of how nirsevimab neutralization differs between the Fab and IgG and how this is impacted by mutations.
     In the interactive chart below and also at [https://jbloomlab.github.io/IgG-vs-Fab-neutralization/chart.html](https://jbloomlab.github.io/IgG-vs-Fab-neutralization/chart.html), you can use the sliders to adjust the Fab affinity ($K_D$), the avidity ($c_{\rm{eff}}$), the effect of the viral mutation(s), and the viral epitope concentration.
     As you do so, you can see how the neutralization curves and IC50s change.
     Note for the IC50s it shows both the actual observed IC50 (accounting for ligand depletion) as well as what would be the ideal IC50 in the absence of any ligand depletion.
-    """)
+    """
+    )
     return
 
 
@@ -432,7 +465,8 @@ def _():
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""
+    mo.md(
+        r"""
     ## Plot model-simulated and actual RSV F neutralization data side by side
     The plot below shows:
 
@@ -440,7 +474,8 @@ def _(mo):
     - **Right panels (actual data):** Pseudovirus neutralization assay data from Teagan and Cassie using Long (subtype A) or B1 (subtype B) RSV F proteins with escape mutations K68Q, K201S, and N201S.
 
     Note that a high-resolution version of the plot is saved to [https://github.com/jbloomlab/IgG-vs-Fab-neutralization/blob/main/simulated_vs_actual_curves.svg](https://github.com/jbloomlab/IgG-vs-Fab-neutralization/blob/main/simulated_vs_actual_curves.svg).
-    """)
+    """
+    )
     return
 
 
